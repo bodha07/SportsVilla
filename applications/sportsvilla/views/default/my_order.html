@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head 
+         content must come *after* these tags -->
+
+    <title>SV Catalog</title>
+<!--
+            <!-- Bootstrap -->
+    <!-- Latest compiled and minified CSS--> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<!-- Optional theme-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha/css/bootstrap.min.css">
+    <link href="{{=URL('static', 'css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{=URL('static', 'css/bootstrap_theme.min.css')}}" rel = "stylesheet" type = "text/css">-->
+    <link href="{{=URL('static', 'css/stylenew.css')}}" rel = "stylesheet" type = "text/css">
+    <link rel="stylesheet" type="text/css" href="{{=URL('static','css/jquery.fancybox.min.css')}}" />
+    {{include 'web2py_ajax.html'}}
+    <style>
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0; // remove the gap so it doesnt close
+            background-color: #222;
+            color:#eeeeee;
+                     }
+        .dropdown:hover .dropdown-menu > li > a{
+                 background-color: #222;
+            color:#eeeeee;
+
+            }
+        .dropdown-menu {
+	background-color: #222;
+	color:#eeeeee;
+        }
+        .dropdown:hover .dropdown-menu > li > a:hover{
+            color:#222;
+	background:white;
+        }
+
+    </style>
+    <!--[if lt IE 9]>
+<script src="{{=URL('static','js/modernizr-2.8.3.min.js')}}"></script>        
+<script src="{{=URL('static','js/respond-1.4.2.min.js')}}"></script>
+        <![endif]-->
+    <!--<script src="https://use.fontawesome.com/148cade734.js"></script>-->
+</head>
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{{=URL('default','index')}}"><b>Sports Villa</b></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right top-nav">
+                <li><button class="btn btn-primary"style="font-color:white;margin:10px 10px 5px 10px;width:130px;height:40px" type="button" onclick="location.href='{{=URL('checkout')}}'" ><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span>&nbsp&nbsp<b>CART</b></button></li>
+                <li class="dropdown" style="margin:5px 30px 5px 10px;font-color:#fff;">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><b>Welcome {{=current_user_database.first_name}} </b><span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{{=URL('default','profile')}}"><span class="glyphicon glyphicon-user"></span> Edit Profile</a></li>
+                        <li class="divider"></li>
+                        <li><a href="{{=URL('default','my_order')}}"><span class="glyphicon glyphicon-list-alt"></span> My Orders</a></li>
+                        <li class="divider"></li>
+                        <li><a href = "{{=URL('default','user',args='logout')}}"><span class="glyphicon glyphicon-off"></span> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+           <!-- <ul class="nav navbar-right top-nav">      
+                <li><button class="btn btn-info" id= "checkout-button" style="margin:5px 50px 2px 20px;"><a href = "{{=URL('default','user',args='logout')}}"><b>Logout</b></a></button></li>
+            </ul> -->
+        </div>
+    </nav>
+    <div class = "row row-content container-fluid">
+        <div class = "col-xs-12 col-sm-12 column" id="style-2" style="margin-top:5px;margin-left:13px;max-width:98%;overflow-y:scroll;">
+            <div class="row" style="margin-top:20px;margin-left:20px">
+                <h3 class="col-sm-4 col-sm-offset-4"><b>My Orders</b></h3>
+            </div>
+            {{if confirmed_order_database == None: }}
+            <div>No Orders Placed</div>
+            {{else:}}
+            {{for items in confirmed_order_database:}}
+            <div class = "row" style="margin-top:20px;margin-left:20px">
+                <h4 style="margin-left:10px">Order-ID: {{=items.id}}&nbsp&nbsp
+                    {{if items.Status == "Submitted":}}
+                    <span class="label label-warning">{{=items.Status}}</span>&nbsp&nbsp&nbsp&nbsp{{=items.DateSubmit}}</h4>
+                    {{elif items.Status == "Processing":}}
+                    <span class="label label-primary">{{=items.Status}}</span>&nbsp&nbsp&nbsp&nbsp{{=items.DateSubmit}}</h4>
+                    {{elif items.Status == "Dispatched":}}
+                    <span class="label label-success">{{=items.Status}}</span>&nbsp&nbsp&nbsp&nbsp{{=items.DateSubmit}}</h4>
+                    {{pass}}
+                
+                <table class = "table table-hover" style ="margin:10px 50px 10px 10px;width:93%;padding-left:50px;padding-right:50px;padding-bottom: 10px;  border:1px solid #d9d9d9;">
+                    <thead class = "thead-inverse" style="background-color:black;font-color:white;">
+                         <tr>
+                             <th style="color:white;">#</th>
+                             <th style="color:white;">Product</th>
+                             <th style="color:white;">Qty</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                        {{i=1}}
+                        {{for row,row2,row3,row4 in zip(items.ProductID,items.ProductName,items.ProductQty,items.ProductCat):}}
+                        <tr>
+                                <th scope = "row">{{=i}}</th>
+                                <td>{{=row2}}</td>
+                                <td>{{=row3}}</td>
+                        <tr>
+                        {{i=i+1}}
+                        {{pass}}
+                        <tr>
+                            <th></th>
+                            <th>Grand Total</th>
+                            <th>{{=items.TotalPrice}}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {{pass}}
+            {{pass}}
+        </div>
+    </div>
+    <footer>
+            <div class="row row-footer">
+                <div class="col-sm-4 col-sm-offset-1">
+                    <h5>Our Address</h5>
+                    <address>
+                      Address<br>
+                      City<br>
+                      State<br>
+                      <i class="fa fa-phone"></i>: +852 1234 5678<br>
+                      <i class="fa fa-fax"></i>: +852 8765 4321<br>
+                      <i class="fa fa-envelope"></i>: <a href="email">services@sportsvilla.in</a>
+                   </address>
+                </div>
+                <div class="col-sm-3 col-sm-offset-4">
+                    <div class="nav navbar-nav" style="padding: 40px 10px;">
+                        <a class="btn btn-social-icon btn-google-plus" href="http://google.com/+"><i class="fa fa-google-plus"></i></a>
+                        <a class="btn btn-social-icon btn-facebook" href="http://www.facebook.com/profile.php?id="><i class="fa fa-facebook"></i></a>
+                        <a class="btn btn-social-icon btn-linkedin" href="http://www.linkedin.com/in/"><i class="fa fa-linkedin"></i></a>
+                        <a class="btn btn-social-icon btn-twitter" href="http://twitter.com/"><i class="fa fa-twitter"></i></a>
+                        <a class="btn btn-social-icon btn-youtube" href="http://youtube.com/"><i class="fa fa-youtube"></i></a>
+                        <a class="btn btn-social-icon" href="mailto:"><i class="fa fa-envelope-o"></i></a>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <p style="padding:10px;"></p>
+                    <p align=center>Copyright © 2015 Sports Villa Fitness Private Limited. All rights reserved.</p>
+                </div>
+            </div>
+    </footer>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="{{=URL('static','js/web2py.js')}}" type="text/javascript"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed--> 
+    <script src = "{{=URL('static','js/bootstrap.min.js')}}"></script>
+    <script>
+        var input = document.getElementById('qty');
+        input.oninvalid = function(event) {
+    event.target.setCustomValidity('The item is currently not available in specified quantity.Please contact the admin before confirming order');
+}
+    </script>
+</body>
