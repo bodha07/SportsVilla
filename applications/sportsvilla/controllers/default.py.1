@@ -1,0 +1,216 @@
+# -*- coding: utf-8 -*-
+# this file is released under public domain and you can use without limitations
+
+# -------------------------------------------------------------------------
+# This is a sample controller
+# - index is the default action of any application
+# - user is required for authentication and authorization
+# - download is for downloading files uploaded in the db (does streaming)
+# -------------------------------------------------------------------------
+from gluon import current
+
+
+def check_membership():
+    if auth.has_membership(role='Admin'):
+        redirect(URL('admin','index'))
+    return True
+
+@auth.requires_login()
+@auth.requires(check_membership)
+#@auth.requires(auth.has_membership(role='End User'))
+def index():
+    """
+    example action using the internationalization operator T and flash
+    rendered by views/default/index.html or views/generic.html
+
+    if you need a simple wiki simply replace the two lines below with:
+    return auth.wiki()
+    """
+    current_user_database = None
+    if auth.user.id:
+        current_user = auth.user.id
+        current_user_database = db(db.auth_user.id==current_user).select(db.auth_user.ALL)[0]
+    current_stored_type = None
+    if request.vars.selected_type:
+        current_stored_type = request.vars['selected_type']
+        session.stored_type = request.vars['selected_type']
+    elif session.stored_type:
+        current_stored_type = session.stored_type;
+    select_type = FORM(LABEL('Sports Apparels',INPUT(_type='radio',_id='selectapparel',_name='selected_type',_autocomplete='on',_value='sport-apparel',value=current_stored_type),_class='btn btn-info'),LABEL('Sports Goods',INPUT(_type='radio',_id='selectgood',_name='selected_type',_autocomplete='on',_value='sport-good',value = current_stored_type),_class='btn btn-primary'),_class='btn-group',_data={'toggle':'buttons'},_id='type-form',_autocomplete='on' ,_onchange="this.form.submit()")
+    
+    apparel_item_database = db(db.ProductAppList2.ParentType == 2).select(db.ProductAppList2.ItemType,distinct=True)
+    goods_sport_database= db(db.ProductGoodsList2.ParentType == 1). select(db.ProductGoodsList2.ParentSport,distinct=True)
+    return dict(apparel_item_database=apparel_item_database,
+                current_stored_type=current_stored_type,
+                select_type=select_type,
+                goods_sport_database=goods_sport_database,
+                current_user_database = current_user_database
+                )
+
+#Function to show list of all selected apparels after search
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def show_apparel_list():
+    selected_products_database_apparel = db((db.ProductAppList2.ParentType == 2) & (db.ProductAppList2.Material == request.vars['apparel_material']) & (db.ProductAppList2.ItemType == request.vars['apparel_item'])).select(db.ProductAppList2.ALL)
+    selected_product_list_apparel = DIV(DIV(_id='happy'),*[A(DIV(IMG(_src=URL('download',args=rows.Image),_alt='Card image cap',_id='product-img',_align='center',_height = '150px'),DIV(BR(),P(rows.Name,BR(),B('₹ ',rows.Price),_class='card-text'),_class='card-block'),_class='card',_id='product-card',_name='card1',value = rows.Name) ,_href=URL('show_selected_product',args=rows.id),cid='hope') for rows in selected_products_database_apparel],_id = 'style-2')
+    return selected_product_list_apparel
+
+#Function to show list of all selected goods after search
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def show_goods_list():
+    selected_products_database_goods = db((db.ProductGoodsList2.ParentType == 1) & (db.ProductGoodsList2.ParentSport == request.vars['goods_sport']) & (db.ProductGoodsList2.ItemType == request.vars['goods_item']) & (db.ProductGoodsList2.Brand == request.vars['goods_brand'])).select(db.ProductGoodsList2.ALL)
+    selected_product_list_goods =  DIV(DIV(_id='happy'),*[A(DIV(IMG(_src=URL('download',args=rows.Image),_alt='Card image cap',_id='product-img',_align='center',_height = '150px'),DIV(BR(),P(rows.ItemName,BR(),B('₹ ',rows.Price),_class='card-text'),_class='card-block'),_class='card',_id='product-card',_name='card1',value = rows.ItemName) ,_href=URL('show_selected_goods',args=rows.id),cid='hope') for rows in selected_products_database_goods],_id = 'style-2')
+    return selected_product_list_goods
+
+#Function to show details of apparel selected in section 3
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def show_selected_product():
+    item_displayed_apparel = db(db.ProductAppList2.id == request.args(0)).select()
+    return dict(item_displayed_apparel = item_displayed_apparel)
+
+#Function to show details of goods selected in section 3
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def show_selected_goods():
+    item_displayed_goods = db(db.ProductGoodsList2.id == request.args(0)).select()
+    return dict(item_displayed_goods = item_displayed_goods)
+
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def update_apparel_material_list():
+    apparel_material_database = db((db.ProductAppList2.ParentType == 2) & (db.ProductAppList2.ItemType == request.vars['apparel_item'])).select(db.ProductAppList2.Material,distinct=True)
+    result = "<option selected hidden>Select Material</option>"
+    for rows in apparel_material_database:
+        result += "<option value='" + rows.Material + "'>" + rows.Material + "</option>"  
+    return XML(result)
+
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def update_goods_item_list():
+    goods_item_database= db((db.ProductGoodsList2.ParentType == 1) & (db.ProductGoodsList2.ParentSport == request.vars['goods_sport'])).select(db.ProductGoodsList2.ItemType, distinct= True)
+    result = "<option selected hidden>Select Item</option>"
+    for rows in goods_item_database:
+        result += "<option value='" + rows.ItemType + "'>" + rows.ItemType + "</option>"  
+    return XML(result)
+
+@auth.requires_login()
+#@auth.requires(auth.has_membership(role='End User'))
+def update_goods_brand_list():
+    goods_brand_database= db((db.ProductGoodsList2.ParentType == 1) & (db.ProductGoodsList2.ParentSport == request.vars['goods_sport']) & (db.ProductGoodsList2.ItemType == request.vars['goods_item'])).select(db.ProductGoodsList2.Brand,distinct = True)
+    result = "<option selected hidden>Select Brand</option>"
+    for rows in goods_brand_database:
+        result += "<option value='" + rows.Brand + "'>" + rows.Brand + "</option>"  
+    return XML(result)
+
+@auth.requires_login()
+def checkout():
+    if auth.user.id:
+        current_user = auth.user.id
+        current_user_database = db(db.auth_user.id==current_user).select(db.auth_user.ALL)[0]
+    return dict(current_user_database = current_user_database)
+
+@auth.requires_login()
+def add_goods_cart():
+    if auth.user.id:
+        user_order_database = db((db.Orders.UserID == auth.user.id) & (db.Orders.Status == "Pending")).select(db.Orders.ALL).first()
+        if user_order_database == None:
+            product_goods_database = db(db.ProductGoodsList2.id == request.vars['product-id']).select(db.ProductGoodsList2.ALL).first()
+            db_product_id_list = []
+            db_product_name_list = []
+            db_product_cat_list = []
+            db_product_qty_list = []
+            db_product_id_list.append(product_goods_database.id)
+            db_product_name_list.append(product_goods_database.ItemName)
+            db_product_cat_list.append("Sports Goods")
+            db_product_qty_list.append(int(request.vars['product-qty']))
+            db_total_price = (float(product_goods_database.Price) * float(request.vars['product-qty'])) + ((float(product_goods_database.Tax)/100)* (float(product_goods_database.Price) * float(request.vars['product-qty'])))
+            db_total_price =int(db_total_price)
+            product_quantity = product_goods_database.Quantity - 2
+            product_goods_database.update_record(Quantity = product_quantity)
+            db.Orders.insert(UserID = auth.user.id,
+                             ProductID = list(db_product_id_list),
+                             ProductName = list(db_product_name_list),
+                             ProductCat = list(db_product_cat_list),
+                             ProductQty = list(db_product_qty_list),
+                             TotalPrice = db_total_price,
+                             Status = "Pending")
+            return DIV(SCRIPT('alert("Successfully Added To Cart");', _type='text/javascript'))
+        elif user_order_database != None:
+            product_goods_database = db(db.ProductGoodsList2.id == request.vars['product-id']).select(db.ProductGoodsList2.ALL)[0]
+            db_product_id_list = list(user_order_database.ProductID)
+            db_product_name_list = list(user_order_database.ProductName)
+            db_product_cat_list = list(user_order_database.ProductCat)
+            db_product_qty_list = list(user_order_database.ProductQty)
+            db_total_price = user_order_database.TotalPrice
+            id_exists = 0
+            flag = 0
+            for i in range(len(db_product_id_list)):
+                if request.vars['product-id'] == db_product_id_list[i]:
+                    id_exists = i
+                    flag = 1
+            if flag == 0:
+                db_product_id_list.append(product_goods_database.id)
+                db_product_name_list.append(product_goods_database.Name)
+                db_product_cat_list.append("Sports Goods")
+                db_product_qty_list.append(request.vars['product-qty'])
+                db_total_price = db_total_price + (product_goods_database.price * request.vars['product-qty']) + ((product_goods_database.Tax/100)*(product_goods_database.price * request.vars['product-qty']))
+                product_quantity = product_goods_database.Quantity - request.vars['Product-qty']
+                product_goods_database.update_record(Quantity = product_quantity)
+                row1 = db((db.Orders.UserID == auth.user.id) & (db.Orders.Status == "Pending")).select().first()
+                row1.update_record(ProductID = list(db_product_id_list),
+                                 ProductName = list(db_product_name_list),
+                                 ProductCat = list(db_product_cat_list),
+                                 ProductQty = list(db_product_qty_list),
+                                 TotalPrice = db_total_price)
+                return SCRIPT('alert("Successfully Added To Cart");', _type='text/javascript')
+            elif flag == 1:
+                return SCRIPT('alert("Item Already Exists in the Cart");', _type='text/javascript')
+def user():
+    """
+    exposes:
+    http://..../[app]/default/user/login
+    http://..../[app]/default/user/logout
+    http://..../[app]/default/user/register
+    http://..../[app]/default/user/profile
+    http://..../[app]/default/user/retrieve_password
+    http://..../[app]/default/user/change_password
+    http://..../[app]/default/user/bulk_register
+    use @auth.requires_login()
+        @auth.requires_membership('group name')
+        @auth.requires_permission('read','table name',record_id)
+    to decorate functions that need access control
+    also notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users
+    """
+    if auth.has_membership(role='End User'):
+        auth.settings.login_next = URL('default','index')
+    else:
+        auth.settings.login_next = URL('admin','index')
+    return dict(form=auth())
+
+
+@cache.action()
+def download():
+    """
+    allows downloading of uploaded files
+    http://..../[app]/default/download/[filename]
+    """
+    return response.download(request, db)
+
+
+def call():
+    """
+    exposes services. for example:
+    http://..../[app]/default/call/jsonrpc
+    decorate with @services.jsonrpc the functions to expose
+    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
+    """
+    return service()
+
+
+@auth.requires_login()
+@auth.requires(auth.has_membership(role='Admin'))
+def ProductView2():
+    grid=SQLFORM.smartgrid(db.ProductType2,linked_tables=['ProductGoodsList2','ProductAppList2'],user_signature=False)
+    return locals()
